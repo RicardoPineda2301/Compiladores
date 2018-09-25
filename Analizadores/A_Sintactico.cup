@@ -1,0 +1,82 @@
+package Analizadores;
+import java_cup.runtime.Symbol;
+import java.util.LinkedList;
+
+//parser,variables, metodos
+parser code
+{:
+    public String resultado="";
+    public static LinkedList<TError> TablaES = new LinkedList<TError>(); 
+
+    //Metodo al que se llama automaticamente ante algun error sintactico
+    public void syntax_error(Symbol s)
+    {        
+        String lexema = s.value.toString();
+        double fila = s.right;
+        double columna = s.left;
+        
+        System.out.println("!!!!!!! Error Sintactico Recuperado !!!!!!!");
+        System.out.println("\t\tLexema: "+lexema);
+        System.out.println("\t\tFila: "+fila);
+        System.out.println("\t\tColumna: "+columna);
+
+        TError datos = new TError(lexema,fila,columna,"Error Sintactico","Caracter no esperado");
+        TablaES.add(datos);
+       
+        
+    }
+
+    //metodo al que se llama en el momento en que ya no es posible una recuperacion de errores
+    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception
+    {        
+        String lexema = s.value.toString();
+        double fila = s.right;
+        double columna = s.left;
+        
+        System.out.println("!!!!!!! Error Sintactico, Panic Mode !!!!!!! ");
+        System.out.println("\t\tLexema: "+lexema);
+        System.out.println("\t\tFila: "+fila);
+        System.out.println("\t\tColumna: "+columna);
+
+        TError datos = new TError(lexema,fila,columna,"Error Sintactico","Caracter no esperado");
+        TablaES.add(datos);
+     
+    }
+:}
+
+
+action code
+{:
+:}
+
+
+// terminales
+terminal CLASSPROGRAM, LLAVE_A, LLAVE_C, MAIN, PAREN_A, PAREN_C, INT, BOOLEAN, BRACKET_A, BRACKET_C, ALPHA, DIGIT;
+
+
+//no terminales
+non terminal Program, main, body, field_decl, field_decl2, type, id;
+
+
+start with Program;
+
+
+Program::= CLASSPROGRAM LLAVE_A main LLAVE_C;
+
+main::= MAIN PAREN_A PAREN_C LLAVE_A body LLAVE_C;
+
+body::= field_decl; 
+
+field_decl::= type field_decl2;
+
+field_decl2::= id | id BRACKET_A int_literal BRACKET_C | id field_decl2 | id BRACKET_A int_literal BRACKET_C field_decl2;
+
+type::= INT | BOOLEAN;
+
+id::= ALPHA id | alpha_num id | ALPHA | alpha_num;
+
+alpha_num::= ALPHA | ALPHA MENOS | DIGIT
+
+int_literal::= 
+
+
