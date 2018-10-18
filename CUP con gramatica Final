@@ -1,0 +1,209 @@
+package Analizadores;
+import java_cup.runtime.Symbol;
+import java.util.LinkedList;
+
+//parser,variables, metodos
+parser code
+{:
+    public String resultado="";
+    public static LinkedList<TError> TablaES = new LinkedList<TError>(); 
+
+    //Metodo al que se llama automaticamente ante algun error sintactico
+    public void syntax_error(Symbol s)
+    {        
+        String lexema = s.value.toString();
+        double fila = s.right;
+        double columna = s.left;
+        
+        System.out.println("!!!!!!! Error Sintactico Recuperado !!!!!!!");
+        System.out.println("\t\tLexema: "+lexema);
+        System.out.println("\t\tFila: "+fila);
+        System.out.println("\t\tColumna: "+columna);
+
+        TError datos = new TError(lexema,fila,columna,"Error Sintactico","Caracter no esperado");
+        TablaES.add(datos);
+       
+        
+    }
+
+    //metodo al que se llama en el momento en que ya no es posible una recuperacion de errores
+    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception
+    {        
+        String lexema = s.value.toString();
+        double fila = s.right;
+        double columna = s.left;
+        
+        System.out.println("!!!!!!! Error Sintactico, Panic Mode !!!!!!! ");
+        System.out.println("\t\tLexema: "+lexema);
+        System.out.println("\t\tFila: "+fila);
+        System.out.println("\t\tColumna: "+columna);
+
+        TError datos = new TError(lexema,fila,columna,"Error Sintactico","Caracter no esperado");
+        TablaES.add(datos);
+     
+    }
+:}
+
+
+action code
+{:
+:}
+
+
+// terminales
+terminal CLASSPROGRAM, LLAVE_A, LLAVE_C, MAIN, PAREN_A, 
+         PAREN_C, INT, BOOLEAN, BRACKET_A, BRACKET_C, 
+         DIGIT, HEX, IDENT, VOID, COMA, FUNCTION, PUNTO_COMA, 
+         EQUAL, MAS_EQ, MENOS_EQ, TRUE, FALSE, CHAR, MAS, MENOS,
+         POR, DIV, PORCENTAJE, MENOR, MAYOR, MENOR_EQ,
+         MAYOR_EQ, EQ_EQ, NOT_EQ, AND, OR, NOT, ELSE, IF, FOR, BREAK, 
+         CALLOUT,CONTINUE,RETURN, STRING;
+
+
+//no terminales
+non terminal Program, main, body, field_decl, field_decl2, 
+             type, id, int_literal, decimal_literal, 
+             hex_literal, method_decl, method_decl2, 
+             method_decl3, block, var_decl, blocks, 
+             id_list, statement, statements, location,
+             assign_op, exprs, expr, method_name, method_call,
+             literal, char_literal, bool_literal, bin_op, arith_op,
+             rel_op, eq_op, cond_op, unary_minus, callout_arg, callouts, string_literal;
+
+precedence left OR, AND;
+precedence left EQ_EQ, NOT_EQ;
+precedence left MENOR, MAYOR, MENOR_EQ, MAYOR_EQ;
+precedence left MAS, MENOS;
+precedence left POR, DIV, PORCENTAJE;
+precedence left NOT;
+
+
+start with Program;
+
+Program::= CLASSPROGRAM LLAVE_A main LLAVE_C;
+
+main::= MAIN PAREN_A PAREN_C LLAVE_A body LLAVE_C;
+
+body::= field_decl |
+        method_decl |
+        field_decl method_decl | 
+        field_decl method_decl body; 
+
+field_decl::= type field_decl2;
+
+field_decl2::= id | 
+               id BRACKET_A int_literal BRACKET_C | 
+               id field_decl2 | 
+               id BRACKET_A int_literal BRACKET_C field_decl2;
+
+method_decl::= FUNCTION method_decl2 id PAREN_A method_decl3 PAREN_C block;
+
+method_decl2::= VOID | 
+                type;
+
+method_decl3::= type id COMA | 
+                type id method_decl3 COMA;
+
+block::= LLAVE_A blocks statement LLAVE_C;
+
+blocks::= var_decl blocks | 
+          var_decl;
+
+var_decl::= type id_list PUNTO_COMA;
+
+id_list::= id_list COMA id |
+           id_list COMA |
+           id;
+
+type::= INT | 
+        BOOLEAN;
+
+statements::= statement statements|
+              statement;
+
+statement::= location assign_op expr PUNTO_COMA |
+             method_call PUNTO_COMA |
+             IF PAREN_A expr PAREN_C block ELSE block |
+             FOR id EQUAL expr COMA expr block |
+             RETURN expr PUNTO_COMA |
+             BREAK PUNTO_COMA |
+             CONTINUE PUNTO_COMA |
+             block;
+
+assign_op::= EQUAL |
+             MAS_EQ |
+             MENOS_EQ;
+
+unary_minus::= MENOS;
+
+method_call::= method_name PAREN_A exprs PAREN_C |
+               CALLOUT PAREN_A string_literal callouts PAREN_C; 
+
+method_name::= id;
+
+location::= id |
+            id BRACKET_A expr BRACKET_C;
+
+exprs::= exprs COMA expr |
+         exprs COMA |
+         expr;
+
+expr::= location |
+        method_call |
+        literal |
+        expr bin_op expr |
+        unary_minus expr |
+        NOT expr |
+        PAREN_A expr PAREN_C;
+
+callouts::= callout_arg COMA callouts |
+            callout_arg;
+
+callout_arg::= expr |
+               string_literal;
+
+literal::= int_literal |
+           char_literal |
+           bool_literal;
+
+bin_op::= arith_op |
+          rel_op |
+          eq_op |
+          cond_op;
+
+arith_op::= MAS |
+            MENOS |
+            POR |
+            DIV |
+            PORCENTAJE;
+
+rel_op::= MENOR |
+          MAYOR |
+          MENOR_EQ |
+          MAYOR_EQ;
+
+eq_op::= EQ_EQ |
+         NOT_EQ;
+
+cond_op::= AND |
+           OR;
+
+id::= IDENT;
+
+int_literal::= decimal_literal | 
+               hex_literal;
+
+decimal_literal::= DIGIT | 
+                   DIGIT decimal_literal;
+
+hex_literal::= HEX |
+               HEX hex_literal;
+
+bool_literal::= TRUE | 
+                FALSE;
+
+char_literal::= CHAR;
+
+string_literal::= STRING;
+
+        
