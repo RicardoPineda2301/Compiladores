@@ -1,5 +1,21 @@
-classProgram {
-main(){
- int aa
-}
+class Program {
+    
+	main(){
+        
+		print ('Hola');
+    
+	}
+
+
+     
+func boolean dsfs(){
+
+        boolean miOtraVar = False;
+
+   
+
+     return;
+    
+	}	
+
 }
