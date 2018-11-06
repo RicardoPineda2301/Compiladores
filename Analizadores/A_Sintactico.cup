@@ -1,82 +1,1345 @@
+/*--------------- 1ra Area: Codigo de Usuario -----------------------*/
+//-------> importaciones, paquetes
 package Analizadores;
 import java_cup.runtime.Symbol;
-import java.util.LinkedList;
+//import java.util.LinkedList;
 
-//parser,variables, metodos
+//------> Codigo para el parser,variables, metodos
 parser code
 {:
+
     public String resultado="";
-    public static LinkedList<TError> TablaES = new LinkedList<TError>(); 
+    public Nodo padre;
+    public int contador = 1;
 
     //Metodo al que se llama automaticamente ante algun error sintactico
-    public void syntax_error(Symbol s)
-    {        
+    public void syntax_error(Symbol s){
         String lexema = s.value.toString();
-        double fila = s.right;
-        double columna = s.left;
-        
-        System.out.println("!!!!!!! Error Sintactico Recuperado !!!!!!!");
+        int fila = s.right;
+        int columna = s.left;
+
+        System.out.println("!Error Sintactico Recuperado!");
         System.out.println("\t\tLexema: "+lexema);
         System.out.println("\t\tFila: "+fila);
         System.out.println("\t\tColumna: "+columna);
 
-        TError datos = new TError(lexema,fila,columna,"Error Sintactico","Caracter no esperado");
-        TablaES.add(datos);
-       
-        
     }
 
-    //metodo al que se llama en el momento en que ya no es posible una recuperacion de errores
-    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception
-    {        
-        String lexema = s.value.toString();
-        double fila = s.right;
-        double columna = s.left;
-        
-        System.out.println("!!!!!!! Error Sintactico, Panic Mode !!!!!!! ");
-        System.out.println("\t\tLexema: "+lexema);
-        System.out.println("\t\tFila: "+fila);
-        System.out.println("\t\tColumna: "+columna);
+    //Metodo al que se llama en el momento en que ya no es posible una recuperacion de errores
+    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception{
 
-        TError datos = new TError(lexema,fila,columna,"Error Sintactico","Caracter no esperado");
-        TablaES.add(datos);
-     
+        String lexema = s.value.toString();
+        int fila = s.right;
+        int columna = s.left;
+
+        System.out.println("Error al compilar");
+
     }
 :}
 
-
+//------> Codigo para las acciones gramaticales
 action code
 {:
 :}
 
-
-// terminales
-terminal CLASSPROGRAM, LLAVE_A, LLAVE_C, MAIN, PAREN_A, PAREN_C, INT, BOOLEAN, BRACKET_A, BRACKET_C, ALPHA, DIGIT;
-
-
-//no terminales
-non terminal Program, main, body, field_decl, field_decl2, type, id;
-
-
-start with Program;
-
-
-Program::= CLASSPROGRAM LLAVE_A main LLAVE_C;
-
-main::= MAIN PAREN_A PAREN_C LLAVE_A body LLAVE_C;
-
-body::= field_decl; 
-
-field_decl::= type field_decl2;
-
-field_decl2::= id | id BRACKET_A int_literal BRACKET_C | id field_decl2 | id BRACKET_A int_literal BRACKET_C field_decl2;
-
-type::= INT | BOOLEAN;
-
-id::= ALPHA id | alpha_num id | ALPHA | alpha_num;
-
-alpha_num::= ALPHA | ALPHA MENOS | DIGIT
-
-int_literal::= 
+/*--------------- 2da Area: Declaraciones -----------------------*/
+//------> declaracion de terminales
+terminal PLUS, MINUS, TIMES, DIV, EQ, PEQ, LEQ, NEG;
+terminal LT, GT, EQEQ, LTEQ, GTEQ, NOTEQ, ANDAND, OROR;
+terminal PARA, PARC, PUNTOCOMA, OBRACE, CBRACE, OBRACK, CBRACK, DBLPUNTO, COMA;
+terminal IF, ELSE, FOR, BREAK, PRINT, CLASS, PRGRM, FUNC, CNT;
+terminal IDNT, BOOLEAN, VOID, INTG, TRT, FLS, MAIN, RTN, HEX, CLL;
+terminal LETTER, STRGN;
+terminal NUM;
 
 
+
+
+//------> declaracion de no terminales
+non terminal VariableDecl, FunctionDecl, ClassDecl, Type, Body, FieldDecl, IdntDecl;
+non terminal ParamDecl, MainDecl, TypeMeth, Decls, Block, LiteralTxt, Chars_literal;
+non terminal INICIO, Expr, Stmt, Oper, IfStmt, ElseStmt, PrintStmt, PosbBlank, ForStmt, ReturnStmt;
+non terminal Method_call, Method_name, Method_expr, Method_expr2, Location, Callout_arg;
+non terminal Bin_op, Assig_op, Arit_op, Rel_op, Eq_op, Cond_op, Literals, Int_literal, Bool_literal;
+
+//----> precedencia de menor a mayor
+precedence left PLUS, MINUS;
+precedence left TIMES, DIV;
+
+start with INICIO;
+
+/*--------------- 3ra Area: Reglas Semanticas -----------------------*/
+INICIO::=
+  ClassDecl:e
+         {:
+        Nodo tmp = new Nodo("Inicio");
+        tmp.setNumNodo(parser.contador++);
+        tmp.addHijo((Nodo) e);
+        parser.padre = (Nodo) tmp;
+        RESULT = tmp;
+        :};
+
+ClassDecl::=
+            CLASS PRGRM OBRACE MainDecl:a Body:b CBRACE
+                  {:
+                  System.out.println("Entro main body");
+                  Nodo tmp = new  Nodo("ClassDecl");
+                  tmp.setNumNodo(parser.contador++);
+                  Nodo clss = new Nodo("Token");
+                  clss.setNumNodo(parser.contador++);
+                  clss.setValor("class");
+                  Nodo prg = new Nodo("Token");
+                  prg.setNumNodo(parser.contador++);
+                  prg.setValor("Program");
+                  Nodo ob = new Nodo("Token");
+                  ob.setNumNodo(parser.contador++);
+                  ob.setValor(" {");
+                  Nodo cb = new Nodo("Token");
+                  cb.setNumNodo(parser.contador++);
+                  cb.setValor(" }");
+
+                  tmp.addHijo((Nodo) clss);
+                  tmp.addHijo((Nodo) prg);
+                  tmp.addHijo((Nodo) ob);
+                  tmp.addHijo((Nodo) a);
+                  tmp.addHijo((Nodo) b);
+                  tmp.addHijo((Nodo) cb);
+                  RESULT = tmp;
+                  :}
+            | CLASS PRGRM OBRACE MainDecl:a CBRACE
+              {:
+              System.out.println("Entro solo main");
+              Nodo tmp = new Nodo("ClassDecl");
+              tmp.setNumNodo(parser.contador++);
+              Nodo clss = new Nodo("Token");
+              clss.setNumNodo(parser.contador++);
+              clss.setValor("class");
+              Nodo prg = new Nodo("Token");
+              prg.setNumNodo(parser.contador++);
+              prg.setValor("Program");
+              Nodo ob = new Nodo("Token");
+              ob.setNumNodo(parser.contador++);
+              ob.setValor(" {");
+              Nodo cb = new Nodo("Token");
+              cb.setNumNodo(parser.contador++);
+              cb.setValor(" }");
+
+              tmp.addHijo((Nodo) clss);
+              tmp.addHijo((Nodo) prg);
+              tmp.addHijo((Nodo) ob);
+              tmp.addHijo((Nodo) a);
+              tmp.addHijo((Nodo) cb);
+              RESULT = tmp;
+              :};
+
+MainDecl::=
+    MAIN PARA PARC OBRACE Block:a CBRACE
+        {:
+        Nodo tmp = new Nodo("MainDecl");
+        tmp.setNumNodo(parser.contador++);
+        Nodo tmp1 = new Nodo("Token");
+        tmp1.setNumNodo(parser.contador++);
+        tmp1.setValor("main");
+        Nodo tmp2 = new Nodo("Token");
+        tmp2.setNumNodo(parser.contador++);
+        tmp2.setValor(" (");
+        Nodo tmp3 = new Nodo("Token");
+        tmp3.setNumNodo(parser.contador++);
+        tmp3.setValor(" )");
+        Nodo tmp4 = new Nodo("Token");
+        tmp4.setNumNodo(parser.contador++);
+        tmp4.setValor(" {");
+        Nodo tmp6 = new Nodo("Token");
+        tmp6.setNumNodo(parser.contador++);
+        tmp6.setValor(" }");
+
+        tmp.addHijo((Nodo) tmp1);
+        tmp.addHijo((Nodo) tmp2);
+        tmp.addHijo((Nodo) tmp3);
+        tmp.addHijo((Nodo) tmp4);
+        tmp.addHijo((Nodo) a);
+        tmp.addHijo((Nodo) tmp6);
+        RESULT = tmp;
+        :};
+
+Body::=
+          FieldDecl:a Body:b
+              {:
+              Nodo tmp = new Nodo("Body");
+              tmp.setNumNodo(parser.contador++);
+              tmp.addHijo((Nodo) a);
+              tmp.addHijo((Nodo) b);
+
+              RESULT = tmp;
+              :}
+        | FunctionDecl:c Body:d
+              {:
+              Nodo tmp = new Nodo("Body");
+              tmp.setNumNodo(parser.contador++);
+              tmp.addHijo((Nodo) c);
+              tmp.addHijo((Nodo) d);
+
+              RESULT = tmp;
+              :}
+        | FieldDecl:e
+            {:
+            Nodo tmp = new Nodo("Body");
+            tmp.setNumNodo(parser.contador++);
+            tmp.addHijo((Nodo) e);
+
+            RESULT = tmp;
+            :}
+        | FunctionDecl:f
+              {:
+              Nodo tmp = new Nodo("Body");
+              tmp.setNumNodo(parser.contador++);
+              tmp.addHijo((Nodo) f);
+
+              RESULT = tmp;
+              :};
+
+
+VariableDecl::=
+              INTG IDNT:b Assig_op:c NUM:d PUNTOCOMA
+                    {:
+                    Nodo tmp = new Nodo("VariableDecl");
+                    tmp.setNumNodo(parser.contador++);
+                    Nodo tmp1 = new Nodo("Type");
+                    tmp1.setNumNodo(parser.contador++);
+                    tmp1.setValor("int");
+                    tmp.addHijo((Nodo) tmp1);
+                    Nodo tmp2 = new Nodo("IDNT");
+                    tmp2.setNumNodo(parser.contador++);
+                    tmp2.setValor(b.toString());
+                    tmp.addHijo((Nodo) tmp2);
+                    tmp.addHijo((Nodo) c);
+                    Nodo tmp3 = new Nodo("Int");
+                    tmp3.setNumNodo(parser.contador++);
+                    tmp3.setValor(d.toString());
+                    tmp.addHijo((Nodo) tmp3);
+                    Nodo tmp4 = new Nodo("Tkn");
+                    tmp4.setNumNodo(parser.contador++);
+                    tmp4.setValor(" ;");
+                    tmp.addHijo((Nodo) tmp4);
+                    RESULT = tmp;
+                    :}
+              | BOOLEAN IDNT:a EQ Bool_literal:b PUNTOCOMA
+                    {:
+                    Nodo tmp = new Nodo("VariableDecl");
+                    tmp.setNumNodo(parser.contador++);
+                    Nodo tmp1 = new Nodo("Type");
+                    tmp1.setNumNodo(parser.contador++);
+                    tmp1.setValor("boolean");
+                    Nodo tmp2 = new Nodo("IDNT");
+                    tmp2.setNumNodo(parser.contador++);
+                    tmp2.setValor(a.toString());
+                    Nodo tmp3 = new Nodo("EQ");
+                    tmp3.setNumNodo(parser.contador++);
+                    tmp3.setValor(" =");
+                    Nodo tmp4 = new Nodo("Tkn");
+                    tmp4.setNumNodo(parser.contador++);
+                    tmp4.setValor(" ;");
+
+                    tmp.addHijo((Nodo) tmp1);
+                    tmp.addHijo((Nodo) tmp2);
+                    tmp.addHijo((Nodo) tmp3);
+                    tmp.addHijo((Nodo) b);
+                    tmp.addHijo((Nodo) tmp4);
+                    RESULT = tmp;
+                    :}
+              | BOOLEAN IDNT EQ error {:System.out.println("--Valor asignado NO Booleano");:} PUNTOCOMA
+              | INTG IDNT Assig_op error {:System.out.println("--Valor asignado NO Entero");:} PUNTOCOMA;
+
+
+FieldDecl::=
+              Type:a IDNT:b IdntDecl:c PUNTOCOMA
+                {:
+
+                Nodo tmp = new Nodo("FielDecl");
+                tmp.setNumNodo(parser.contador++);
+                Nodo tmp1 = new Nodo("IDNT");
+                tmp1.setNumNodo(parser.contador++);
+                tmp1.setValor(b.toString());
+                Nodo tmp2 = new Nodo("Tkn");
+                tmp2.setNumNodo(parser.contador++);
+                tmp2.setValor(" ;");
+
+                tmp.addHijo((Nodo) a);
+                tmp.addHijo((Nodo) tmp1);
+                tmp.addHijo((Nodo) c);
+                tmp.addHijo((Nodo) tmp2);
+                RESULT = tmp;:}
+            | Type:a IDNT:b OBRACK NUM:c CBRACK IdntDecl:d PUNTOCOMA
+                {:
+                Nodo tmp = new Nodo("FielDecl");
+                tmp.setNumNodo(parser.contador++);
+                Nodo tmp1 = new Nodo("IDNT");
+                tmp1.setNumNodo(parser.contador++);
+                tmp1.setValor(b.toString());
+                Nodo tmp2 = new Nodo("Tkn");
+                tmp2.setNumNodo(parser.contador++);
+                tmp2.setValor(" {");
+                Nodo tmp3 = new Nodo("Int");
+                tmp3.setNumNodo(parser.contador++);
+                tmp3.setValor(c.toString());
+                Nodo tmp4 = new Nodo("Tkn");
+                tmp4.setNumNodo(parser.contador++);
+                tmp4.setValor(" }");
+                Nodo tmp5 = new Nodo("Tkn");
+                tmp5.setNumNodo(parser.contador++);
+                tmp5.setValor(" ;");
+
+
+                tmp.addHijo((Nodo) a);
+                tmp.addHijo((Nodo) tmp1);
+                tmp.addHijo((Nodo) tmp2);
+                tmp.addHijo((Nodo) tmp3);
+                tmp.addHijo((Nodo) tmp4);
+                tmp.addHijo((Nodo) d);
+                tmp.addHijo((Nodo) tmp5);
+                RESULT = tmp; :}
+            | Type:a IDNT:b PUNTOCOMA
+                {:
+                Nodo tmp = new Nodo("FielDecl");
+                tmp.setNumNodo(parser.contador++);
+                Nodo tmp1 = new Nodo("IDNT");
+                tmp1.setNumNodo(parser.contador++);
+                tmp1.setValor(b.toString());
+                Nodo tmp2 = new Nodo("Tkn");
+                tmp2.setNumNodo(parser.contador++);
+                tmp2.setValor(" ;");
+
+                tmp.addHijo((Nodo) a);
+                tmp.addHijo((Nodo) tmp1);
+                tmp.addHijo((Nodo) tmp2);
+                RESULT = tmp;
+                :}
+            | Type:a IDNT:b OBRACK NUM:c CBRACK PUNTOCOMA
+                  {:
+                  Nodo tmp = new Nodo("FielDecl");
+                  tmp.setNumNodo(parser.contador++);
+                  Nodo tmp1 = new Nodo("IDNT");
+                  tmp1.setNumNodo(parser.contador++);
+                  tmp1.setValor(b.toString());
+                  Nodo tmp2 = new Nodo("Tkn");
+                  tmp2.setNumNodo(parser.contador++);
+                  tmp2.setValor(" [");
+                  Nodo tmp3 = new Nodo("Int");
+                  tmp3.setNumNodo(parser.contador++);
+                  tmp3.setValor(c.toString());
+                  Nodo tmp4 = new Nodo("Tkn");
+                  tmp4.setNumNodo(parser.contador++);
+                  tmp4.setValor(" ]");
+                  Nodo tmp5 = new Nodo("Tkn");
+                  tmp5.setNumNodo(parser.contador++);
+                  tmp5.setValor(" ;");
+
+                  tmp.addHijo((Nodo) a);
+                  tmp.addHijo((Nodo) tmp1);
+                  tmp.addHijo((Nodo) tmp2);
+                  tmp.addHijo((Nodo) tmp3);
+                  tmp.addHijo((Nodo) tmp4);
+                  tmp.addHijo((Nodo) tmp5);
+                  RESULT = tmp;
+                  :};
+
+////
+IdntDecl::=
+            COMA IDNT:a OBRACK NUM:b CBRACK IdntDecl:c
+                {:
+                Nodo tmp = new Nodo("IdntDecl");
+                tmp.setNumNodo(parser.contador++);
+                Nodo tmp1 = new Nodo("Tkn");
+                tmp1.setNumNodo(parser.contador++);
+                tmp1.setValor(" ,");
+                Nodo tmp2 = new Nodo("IDNT");
+                tmp2.setNumNodo(parser.contador++);
+                tmp2.setValor(a.toString());
+                Nodo tmp3 = new Nodo("Tkn");
+                tmp3.setNumNodo(parser.contador++);
+                tmp3.setValor(" [");
+                Nodo tmp4 = new Nodo("Int");
+                tmp4.setNumNodo(parser.contador++);
+                tmp4.setValor(b.toString());
+                Nodo tmp5 = new Nodo("Tkn");
+                tmp5.setNumNodo(parser.contador++);
+                tmp5.setValor(" ]");
+                tmp.addHijo((Nodo) tmp1);
+                tmp.addHijo((Nodo) tmp2);
+                tmp.addHijo((Nodo) tmp3);
+                tmp.addHijo((Nodo) tmp4);
+                tmp.addHijo((Nodo) tmp5);
+                tmp.addHijo((Nodo) c);
+                RESULT = tmp;
+                :}
+            | COMA IDNT:a IdntDecl:b
+                {:
+                Nodo tmp = new Nodo("IdntDecl");
+                tmp.setNumNodo(parser.contador++);
+                Nodo tmp1 = new Nodo("Tkn");
+                tmp1.setNumNodo(parser.contador++);
+                tmp1.setValor(" ,");
+                Nodo tmp2 = new Nodo("IDNT");
+                tmp2.setNumNodo(parser.contador++);
+                tmp2.setValor(a.toString());
+                tmp.addHijo((Nodo) tmp1);
+                tmp.addHijo((Nodo) tmp2);
+                tmp.addHijo((Nodo) b);
+                RESULT = tmp;
+                :}
+            | COMA IDNT:a
+                {:
+                Nodo tmp = new Nodo("IdntDecl");
+                tmp.setNumNodo(parser.contador++);
+                Nodo tmp1 = new Nodo("Tkn");
+                tmp1.setNumNodo(parser.contador++);
+                tmp1.setValor(" ,");
+                Nodo tmp2 = new Nodo("IDNT");
+                tmp2.setNumNodo(parser.contador++);
+                tmp2.setValor(a.toString());
+
+                tmp.addHijo((Nodo) tmp1);
+                tmp.addHijo((Nodo) tmp2);
+                RESULT = tmp;
+                :}
+            | COMA IDNT:a OBRACK NUM:b CBRACK
+                {:
+                Nodo tmp = new Nodo("IdntDecl");
+                tmp.setNumNodo(parser.contador++);
+                Nodo tmp1 = new Nodo("Tkn");
+                tmp1.setNumNodo(parser.contador++);
+                tmp1.setValor(" ,");
+                Nodo tmp2 = new Nodo("IDNT");
+                tmp2.setNumNodo(parser.contador++);
+                tmp2.setValor(a.toString());
+                Nodo tmp3 = new Nodo("Tkn");
+                tmp3.setNumNodo(parser.contador++);
+                tmp3.setValor(" [");
+                Nodo tmp4 = new Nodo("Int");
+                tmp4.setNumNodo(parser.contador++);
+                tmp4.setValor(b.toString());
+                Nodo tmp5 = new Nodo("Tkn");
+                tmp5.setNumNodo(parser.contador++);
+                tmp5.setValor(" ]");
+
+                tmp.addHijo((Nodo) tmp1);
+                tmp.addHijo((Nodo) tmp2);
+                tmp.addHijo((Nodo) tmp3);
+                tmp.addHijo((Nodo) tmp4);
+                tmp.addHijo((Nodo) tmp5);
+                RESULT = tmp;
+                :};
+
+
+Block::=
+          VariableDecl:a Block:b
+              {:
+              Nodo tmp = new Nodo("Block");
+              tmp.setNumNodo(parser.contador++);
+              tmp.addHijo((Nodo) a);
+              tmp.addHijo((Nodo) b);
+
+              RESULT = tmp;
+              :}
+        | Stmt:a Block:b
+            {:
+            Nodo tmp = new Nodo("Block");
+            tmp.setNumNodo(parser.contador++);
+            tmp.addHijo((Nodo) a);
+            tmp.addHijo((Nodo) b);
+            RESULT = tmp;
+            :}
+        | VariableDecl:a
+            {:
+            Nodo tmp = new Nodo("Block");
+            tmp.setNumNodo(parser.contador++);
+            tmp.addHijo((Nodo) a);
+            RESULT = tmp;
+            :}
+        | Stmt:a
+          {:
+          Nodo tmp = new Nodo("Block");
+          tmp.setNumNodo(parser.contador++);
+          tmp.addHijo((Nodo) a);
+          RESULT = tmp;
+          :};
+
+Stmt::=
+          PrintStmt:a
+            {:
+            Nodo tmp = new Nodo("Stmt");
+            tmp.setNumNodo(parser.contador++);
+            tmp.addHijo((Nodo) a);
+            RESULT = tmp;
+            :}
+        | IfStmt:a
+              {:
+              Nodo tmp = new Nodo("Stmt");
+              tmp.setNumNodo(parser.contador++);
+              tmp.addHijo((Nodo) a);
+              RESULT = tmp;
+              :}
+        | ForStmt:a
+            {:
+            Nodo tmp = new Nodo("Stmt");
+            tmp.setNumNodo(parser.contador++);
+            tmp.addHijo((Nodo) a);
+            RESULT = tmp;
+            :}
+        | ReturnStmt:a
+            {:
+            Nodo tmp = new Nodo("Stmt");
+            tmp.setNumNodo(parser.contador++);
+            tmp.addHijo((Nodo) a);
+            RESULT = tmp;
+            :}
+        | Method_call:a
+              {:
+              Nodo tmp = new Nodo("Stmt");
+              tmp.setNumNodo(parser.contador++);
+              tmp.addHijo((Nodo) a);
+              RESULT = tmp;
+              :}
+        | BREAK PUNTOCOMA
+              {:
+              Nodo tmp = new Nodo("Stmt");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("Tkn");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor("break");
+              Nodo tmp2 = new Nodo("Tkn");
+              tmp2.setNumNodo(parser.contador++);
+              tmp2.setValor(" ;");
+
+              tmp.addHijo((Nodo) tmp1);
+              tmp.addHijo((Nodo) tmp2);
+              RESULT = tmp;
+              :}
+        | CNT PUNTOCOMA
+              {:
+              Nodo tmp = new Nodo("Stmt");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("Tkn");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor(" continue");
+              Nodo tmp2 = new Nodo("Tkn");
+              tmp2.setNumNodo(parser.contador++);
+              tmp2.setValor(" ;");
+
+              tmp.addHijo((Nodo) tmp1);
+              tmp.addHijo((Nodo) tmp2);
+              RESULT = tmp;
+              :};
+
+
+ReturnStmt::=
+              RTN PUNTOCOMA
+                    {:
+                    Nodo tmp = new Nodo("ReturnStmt");
+                    tmp.setNumNodo(parser.contador++);
+                    Nodo tmp1 = new Nodo("Tkn");
+                    tmp1.setNumNodo(parser.contador++);
+                    tmp1.setValor("return");
+                    Nodo tmp2 = new Nodo("Tkn");
+                    tmp2.setNumNodo(parser.contador++);
+                    tmp2.setValor(" ;");
+
+                    tmp.addHijo((Nodo) tmp1);
+                    tmp.addHijo((Nodo) tmp2);
+                    RESULT = tmp;
+                    :}
+            | RTN Expr:a PUNTOCOMA
+                  {:
+                  Nodo tmp = new Nodo("ReturnStmt");
+                  tmp.setNumNodo(parser.contador++);
+                  Nodo tmp1 = new Nodo("Tkn");
+                  tmp1.setNumNodo(parser.contador++);
+                  tmp1.setValor("return");
+                  Nodo tmp2 = new Nodo("Tkn");
+                  tmp2.setNumNodo(parser.contador++);
+                  tmp2.setValor(" ;");
+
+                  tmp.addHijo((Nodo) tmp1);
+                  tmp.addHijo((Nodo) a);
+                  tmp.addHijo((Nodo) tmp2);
+                  RESULT = tmp;
+                  :}
+            | RTN Expr error {:System.out.println("---Falta Punto y Coma ");:}
+            | RTN error {:System.out.println("---Falta Punto y Coma ");:};
+
+PrintStmt::=
+          PRINT PARA PosbBlank:a PARC PUNTOCOMA
+                {:
+                Nodo tmp = new Nodo("PrintStmt");
+                tmp.setNumNodo(parser.contador++);
+                Nodo tmp1 = new Nodo("Tkn");
+                tmp1.setNumNodo(parser.contador++);
+                tmp1.setValor("print");
+                Nodo tmp2 = new Nodo("Tkn");
+                tmp2.setNumNodo(parser.contador++);
+                tmp2.setValor(" (");
+                Nodo tmp3 = new Nodo("Tkn");
+                tmp3.setNumNodo(parser.contador++);
+                tmp3.setValor(" )");
+                Nodo tmp4 = new Nodo("puntocoma");
+                tmp4.setNumNodo(parser.contador++);
+                tmp4.setValor(" ;");
+                tmp.addHijo((Nodo) tmp1);
+                tmp.addHijo((Nodo) tmp2);
+                tmp.addHijo((Nodo) a);
+                tmp.addHijo((Nodo) tmp3);
+                tmp.addHijo((Nodo) tmp4);
+                RESULT = tmp;
+                :}
+        | PRINT PARA PosbBlank PARC error {:System.out.println("Falta Puntocoma");:};
+
+IfStmt::=
+          IF PARA Expr:a PARC OBRACE Block:b CBRACE ELSE OBRACE Block:c CBRACE
+                  {:
+                  Nodo tmp = new Nodo("IfStmt");
+                  tmp.setNumNodo(parser.contador++);
+                  Nodo tmp1 = new Nodo("Tkn");
+                  tmp1.setNumNodo(parser.contador++);
+                  tmp1.setValor("if");
+                  Nodo tmp2 = new Nodo("Tkn");
+                  tmp2.setNumNodo(parser.contador++);
+                  tmp2.setValor(" (");
+                  Nodo tmp3 = new Nodo("Tkn");
+                  tmp3.setNumNodo(parser.contador++);
+                  tmp3.setValor(" )");
+                  Nodo tmp4 = new Nodo("Tkn");
+                  tmp4.setNumNodo(parser.contador++);
+                  tmp4.setValor(" {");
+                  Nodo tmp5 = new Nodo("Tkn");
+                  tmp5.setNumNodo(parser.contador++);
+                  tmp5.setValor(" }");
+                  Nodo tmp6 = new Nodo("Tkn");
+                  tmp6.setNumNodo(parser.contador++);
+                  tmp6.setValor("else");
+                  Nodo tmp7 = new Nodo("Tkn");
+                  tmp7.setNumNodo(parser.contador++);
+                  tmp7.setValor(" {");
+                  Nodo tmp8 = new Nodo("Tkn");
+                  tmp8.setNumNodo(parser.contador++);
+                  tmp8.setValor(" }");
+
+                  tmp.addHijo((Nodo) tmp1);
+                  tmp.addHijo((Nodo) tmp2);
+                  tmp.addHijo((Nodo) a);
+                  tmp.addHijo((Nodo) tmp3);
+                  tmp.addHijo((Nodo) tmp4);
+                  tmp.addHijo((Nodo) b);
+                  tmp.addHijo((Nodo) tmp5);
+                  tmp.addHijo((Nodo) tmp6);
+                  tmp.addHijo((Nodo) tmp7);
+                  tmp.addHijo((Nodo) c);
+                  tmp.addHijo((Nodo) tmp8);
+                  RESULT = tmp;
+                  :}
+        | IF PARA Expr:a PARC OBRACE Block:b CBRACE
+                {:
+                Nodo tmp = new Nodo("IfStmt");
+                tmp.setNumNodo(parser.contador++);
+                Nodo tmp1 = new Nodo("Tkn");
+                tmp1.setNumNodo(parser.contador++);
+                tmp1.setValor("if");
+                Nodo tmp2 = new Nodo("Tkn");
+                tmp2.setNumNodo(parser.contador++);
+                tmp2.setValor(" (");
+                Nodo tmp3 = new Nodo("Tkn");
+                tmp3.setNumNodo(parser.contador++);
+                tmp3.setValor(" )");
+                Nodo tmp4 = new Nodo("Tkn");
+                tmp4.setNumNodo(parser.contador++);
+                tmp4.setValor(" {");
+                Nodo tmp5 = new Nodo("Tkn");
+                tmp5.setNumNodo(parser.contador++);
+                tmp5.setValor(" }");
+
+                tmp.addHijo((Nodo) tmp1);
+                tmp.addHijo((Nodo) tmp2);
+                tmp.addHijo((Nodo) a);
+                tmp.addHijo((Nodo) tmp3);
+                tmp.addHijo((Nodo) tmp4);
+                tmp.addHijo((Nodo) b);
+                tmp.addHijo((Nodo) tmp5);
+                RESULT = tmp;
+                :}
+        | IF PARA error {: System.out.println("----Error en Expresion"); :} PARC OBRACE Block CBRACE;
+
+ElseStmt::=
+        ELSE OBRACE Block:a CBRACE
+              {:
+              Nodo tmp = new Nodo("ElseStmt");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("Tkn");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor("else");
+              Nodo tmp2 = new Nodo("Tkn");
+              tmp2.setNumNodo(parser.contador++);
+              tmp2.setValor(" {");
+              Nodo tmp3 = new Nodo("Tkn");
+              tmp3.setNumNodo(parser.contador++);
+              tmp3.setValor(" }");
+
+              tmp.addHijo((Nodo) tmp1);
+              tmp.addHijo((Nodo) tmp2);
+              tmp.addHijo((Nodo) a);
+              tmp.addHijo((Nodo) tmp3);
+              RESULT = tmp;
+              :};
+
+ForStmt::=
+      FOR IDNT:a EQ Expr:b COMA Expr:c OBRACE Block:d CBRACE
+              {:
+              Nodo tmp = new Nodo("ForStmt");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("Tkn");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor("for");
+              Nodo tmp6 = new Nodo("IDNT");
+              tmp6.setNumNodo(parser.contador++);
+              tmp6.setValor(a.toString());
+              Nodo tmp2 = new Nodo("Tkn");
+              tmp2.setNumNodo(parser.contador++);
+              tmp2.setValor(" =");
+              Nodo tmp3 = new Nodo("Tkn");
+              tmp3.setNumNodo(parser.contador++);
+              tmp3.setValor(" ,");
+              Nodo tmp4 = new Nodo("Tkn");
+              tmp4.setNumNodo(parser.contador++);
+              tmp4.setValor(" {");
+              Nodo tmp5 = new Nodo("Tkn");
+              tmp5.setNumNodo(parser.contador++);
+              tmp5.setValor(" }");
+
+              tmp.addHijo((Nodo) tmp1);
+              tmp.addHijo((Nodo) tmp6);
+              tmp.addHijo((Nodo) tmp2);
+              tmp.addHijo((Nodo) b);
+              tmp.addHijo((Nodo) tmp3);
+              tmp.addHijo((Nodo) c);
+              tmp.addHijo((Nodo) tmp4);
+              tmp.addHijo((Nodo) d);
+              tmp.addHijo((Nodo) tmp5);
+              RESULT = tmp;
+              :};
+
+PosbBlank::=
+          | STRGN:a
+              {:
+              Nodo tmp = new Nodo("PosbBlank");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("String");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor(a.toString());
+
+              tmp.addHijo((Nodo) tmp1);
+              RESULT = tmp;
+              :}
+          | LETTER:a
+              {:
+              Nodo tmp = new Nodo("PosbBlank");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("Lttr");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor(a.toString());
+
+              tmp.addHijo((Nodo) tmp1);
+              RESULT = tmp;
+              :};
+
+Location::=
+              IDNT:a
+                  {:
+                  Nodo tmp = new Nodo("Location");
+                  tmp.setNumNodo(parser.contador++);
+                  Nodo tmp1 = new Nodo("IDNT");
+                  tmp1.setNumNodo(parser.contador++);
+                  tmp1.setValor(a.toString());
+
+                  tmp.addHijo((Nodo) tmp1);
+                  RESULT = tmp;
+                  :}
+            | IDNT:a OBRACK Expr:b CBRACK
+                {:
+                Nodo tmp = new Nodo("Location");
+                tmp.setNumNodo(parser.contador++);
+                Nodo tmp1 = new Nodo("IDNT");
+                tmp1.setNumNodo(parser.contador++);
+                tmp1.setValor(a.toString());
+                Nodo tmp2 = new Nodo("Tkn");
+                tmp2.setNumNodo(parser.contador++);
+                tmp2.setValor(" {");
+                Nodo tmp3 = new Nodo("Tkn");
+                tmp3.setNumNodo(parser.contador++);
+                tmp3.setValor(" }");
+
+                tmp.addHijo((Nodo) tmp1);
+                tmp.addHijo((Nodo) tmp2);
+                tmp.addHijo((Nodo) b);
+                tmp.addHijo((Nodo) tmp3);
+                RESULT = tmp;
+                :};
+
+Method_call::=
+            Method_name:a PARA Method_expr:b PARC PUNTOCOMA
+                {:
+                Nodo tmp = new Nodo("Method_call");
+                tmp.setNumNodo(parser.contador++);
+                Nodo tmp1 = new Nodo("Tkn");
+                tmp1.setNumNodo(parser.contador++);
+                tmp1.setValor(" (");
+                Nodo tmp2 = new Nodo("Tkn");
+                tmp2.setNumNodo(parser.contador++);
+                tmp2.setValor(" )");
+                Nodo tmp3 = new Nodo("Tkn");
+                tmp3.setNumNodo(parser.contador++);
+                tmp3.setValor(" ;");
+
+                tmp.addHijo((Nodo) a);
+                tmp.addHijo((Nodo) tmp1);
+                tmp.addHijo((Nodo) b);
+                tmp.addHijo((Nodo) tmp2);
+                tmp.addHijo((Nodo) tmp3);
+                RESULT = tmp;
+                :}
+          | Method_name:a PARA PARC PUNTOCOMA
+                  {:
+                  Nodo tmp = new Nodo("Method_call");
+                  tmp.setNumNodo(parser.contador++);
+                  Nodo tmp1 = new Nodo("Tkn");
+                  tmp1.setNumNodo(parser.contador++);
+                  tmp1.setValor(" (");
+                  Nodo tmp2 = new Nodo("Tkn");
+                  tmp2.setNumNodo(parser.contador++);
+                  tmp2.setValor(" )");
+                  Nodo tmp3 = new Nodo("Tkn");
+                  tmp3.setNumNodo(parser.contador++);
+                  tmp3.setValor(" ;");
+
+                  tmp.addHijo((Nodo) a);
+                  tmp.addHijo((Nodo) tmp1);
+                  tmp.addHijo((Nodo) tmp2);
+                  tmp.addHijo((Nodo) tmp3);
+                  RESULT = tmp;
+                  :}
+          | CLL PARA STRGN:a  Callout_arg:b  PARC
+                {:
+                Nodo tmp = new Nodo("Method_call");
+                tmp.setNumNodo(parser.contador++);
+                Nodo tmp1 = new Nodo("CLL");
+                tmp1.setNumNodo(parser.contador++);
+                tmp1.setValor("callout");
+                Nodo tmp3 = new Nodo("Tkn");
+                tmp3.setNumNodo(parser.contador++);
+                tmp3.setValor(" (");
+                Nodo tmp2 = new Nodo("STRGN");
+                tmp2.setNumNodo(parser.contador++);
+                tmp2.setValor(a.toString());
+                Nodo tmp4 = new Nodo("Tkn");
+                tmp4.setNumNodo(parser.contador++);
+                tmp4.setValor(" )");
+
+                tmp.addHijo((Nodo) tmp1);
+                tmp.addHijo((Nodo) tmp3);
+                tmp.addHijo((Nodo) tmp2);
+                tmp.addHijo((Nodo) b);
+                tmp.addHijo((Nodo) tmp4);
+                RESULT = tmp;
+                :}
+          | CLL PARA STRGN:a PARC
+                {:
+                Nodo tmp = new Nodo("Method_call");
+                tmp.setNumNodo(parser.contador++);
+                Nodo tmp1 = new Nodo("CLL");
+                tmp1.setNumNodo(parser.contador++);
+                tmp1.setValor("callout");
+                Nodo tmp3 = new Nodo("Tkn");
+                tmp3.setNumNodo(parser.contador++);
+                tmp3.setValor(" (");
+                Nodo tmp2 = new Nodo("STRGN");
+                tmp2.setNumNodo(parser.contador++);
+                tmp2.setValor(a.toString());
+                Nodo tmp4 = new Nodo("Tkn");
+                tmp4.setNumNodo(parser.contador++);
+                tmp4.setValor(" )");
+
+                tmp.addHijo((Nodo) tmp1);
+                tmp.addHijo((Nodo) tmp3);
+                tmp.addHijo((Nodo) tmp2);
+                tmp.addHijo((Nodo) tmp4);
+                RESULT = tmp;
+                :};
+
+Callout_arg::=
+          COMA Expr:a Callout_arg:b
+              {:
+              Nodo tmp = new Nodo("Callout_arg");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("Tkn");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor(" ,");
+
+              tmp.addHijo((Nodo) tmp1);
+              tmp.addHijo((Nodo) a);
+              tmp.addHijo((Nodo) b);
+              RESULT = tmp;
+              :}
+        | COMA Expr:a
+              {:
+              Nodo tmp = new Nodo("Callout_arg");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("Tkn");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor(" ,");
+
+              tmp.addHijo((Nodo) tmp1);
+              tmp.addHijo((Nodo) a);
+              RESULT = tmp;
+              :};
+
+Method_name::=
+          IDNT:a
+              {:
+              Nodo tmp = new Nodo("Method_name");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("IDNT");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor(a.toString());
+
+              tmp.addHijo((Nodo) tmp1);
+              RESULT = tmp;
+              :};
+
+Method_expr::=
+              Expr:a Method_expr2:b
+                  {:
+                  Nodo tmp = new Nodo("Method_expr");
+                  tmp.setNumNodo(parser.contador++);
+
+                  tmp.addHijo((Nodo) a);
+                  tmp.addHijo((Nodo) b);
+                  RESULT = tmp;
+                  :}
+            | Expr:a
+                  {:
+                  Nodo tmp = new Nodo("Method_expr");
+                  tmp.setNumNodo(parser.contador++);
+
+                  tmp.addHijo((Nodo) a);
+                  RESULT = tmp;
+                  :};
+
+
+Method_expr2::=
+        COMA Expr:a Method_expr2:b
+            {:
+            Nodo tmp = new Nodo("Method_expr2");
+            tmp.setNumNodo(parser.contador++);
+            Nodo tmp1 = new Nodo("Tkn");
+            tmp1.setNumNodo(parser.contador++);
+            tmp1.setValor(" ,");
+
+            tmp.addHijo((Nodo) tmp1);
+            tmp.addHijo((Nodo) a);
+            tmp.addHijo((Nodo) b);
+            RESULT = tmp;
+            :}
+      | COMA Expr:a
+            {:
+            Nodo tmp = new Nodo("Method_expr2");
+            tmp.setNumNodo(parser.contador++);
+            Nodo tmp1 = new Nodo("Tkn");
+            tmp1.setNumNodo(parser.contador++);
+            tmp1.setValor(" ,");
+
+            tmp.addHijo((Nodo) tmp1);
+            tmp.addHijo((Nodo) a);
+            RESULT = tmp;
+            :};
+
+
+Expr::=
+          Expr:a Bin_op:b Expr:c
+              {:
+              Nodo tmp = new Nodo("Expr");
+              tmp.setNumNodo(parser.contador++);
+
+              tmp.addHijo((Nodo) a);
+              tmp.addHijo((Nodo) b);
+              tmp.addHijo((Nodo) c);
+              RESULT = tmp;
+              :}
+        | PARA Expr:a PARC
+              {:
+              Nodo tmp = new Nodo("Expr");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("Tkn");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor(" (");
+              Nodo tmp2 = new Nodo("Tkn");
+              tmp2.setNumNodo(parser.contador++);
+              tmp2.setValor(" )");
+
+              tmp.addHijo((Nodo) tmp1);
+              tmp.addHijo((Nodo) a);
+              tmp.addHijo((Nodo) tmp2);
+              RESULT = tmp;
+              :}
+        | MINUS Expr:a
+              {:
+              Nodo tmp = new Nodo("Expr");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("MINUS");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor(" -");
+
+              tmp.addHijo((Nodo) tmp1);
+              tmp.addHijo((Nodo) a);
+              RESULT = tmp;
+              :}
+        | NEG Expr:a
+              {:
+              Nodo tmp = new Nodo("Expr");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("NEG");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor(" !");
+
+              tmp.addHijo((Nodo) tmp1);
+              tmp.addHijo((Nodo) a);
+              RESULT = tmp;
+              :}
+        | Location:a
+              {:
+              Nodo tmp = new Nodo("Expr");
+              tmp.setNumNodo(parser.contador++);
+
+              tmp.addHijo((Nodo) a);
+              RESULT = tmp;
+              :}
+        | Literals:a
+              {:
+              Nodo tmp = new Nodo("Expr");
+              tmp.setNumNodo(parser.contador++);
+
+              tmp.addHijo((Nodo) a);
+              RESULT = tmp;
+              :};
+
+Assig_op::=
+            EQ
+                  {:
+                  Nodo tmp = new Nodo("Assign_Op");
+                  tmp.setNumNodo(parser.contador++);
+                  Nodo tmp1 = new Nodo("EQ");
+                  tmp1.setNumNodo(parser.contador++);
+                  tmp1.setValor(" =");
+                  tmp.addHijo((Nodo) tmp1);
+                  RESULT = tmp; :}
+          | PEQ
+              {:
+              Nodo tmp = new Nodo("Assign_Op");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("PEQ");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor(" +=");
+              tmp.addHijo((Nodo) tmp1);
+              RESULT = tmp; :}
+          | LEQ
+              {:
+              Nodo tmp = new Nodo("Assign_Op");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("LEQ");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor(" -=");
+              tmp.addHijo((Nodo) tmp1);
+              RESULT = tmp;:};
+
+Bin_op::=
+          PLUS
+            {:
+            Nodo tmp = new Nodo("Bin_op");
+            tmp.setNumNodo(parser.contador++);
+            Nodo tmp1 = new Nodo("PLUS");
+            tmp1.setNumNodo(parser.contador++);
+            tmp1.setValor(" +");
+
+            tmp.addHijo((Nodo) tmp1);
+            RESULT = tmp;
+            :}
+        | MINUS
+              {:
+
+              Nodo tmp = new Nodo("Bin_op");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("MINUS");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor(" -");
+              tmp.addHijo((Nodo) tmp1);
+              RESULT = tmp; :}
+        | TIMES
+            {:
+            Nodo tmp = new Nodo("Bin_op");
+            tmp.setNumNodo(parser.contador++);
+            Nodo tmp1 = new Nodo("TIMES");
+            tmp1.setNumNodo(parser.contador++);
+            tmp1.setValor(" *");
+            tmp.addHijo((Nodo) tmp1);
+            RESULT = tmp;
+            :}
+        | DIV
+          {:
+          Nodo tmp = new Nodo("Bin_op");
+          tmp.setNumNodo(parser.contador++);
+          Nodo tmp1 = new Nodo("DIV");
+          tmp1.setNumNodo(parser.contador++);
+          tmp1.setValor(" /");
+          tmp.addHijo((Nodo) tmp1);
+          RESULT = tmp; :};
+
+Literals::=
+          Bool_literal:a
+              {:
+              Nodo tmp = new Nodo("Literals");
+              tmp.setNumNodo(parser.contador++);
+
+              tmp.addHijo((Nodo) a);
+              RESULT = tmp;
+              :}
+        | Chars_literal:a
+              {:
+              Nodo tmp = new Nodo("Literals");
+              tmp.setNumNodo(parser.contador++);
+
+              tmp.addHijo((Nodo) a);
+              RESULT = tmp;
+              :}
+        | Int_literal:a
+              {:
+              Nodo tmp = new Nodo("Literals");
+              tmp.setNumNodo(parser.contador++);
+
+              tmp.addHijo((Nodo) a);
+              RESULT = tmp;
+              :};
+
+Int_literal::=
+        NUM:a
+            {:
+            Nodo tmp = new Nodo("Int_literal");
+            tmp.setNumNodo(parser.contador++);
+            Nodo tmp1 = new Nodo("NUM");
+            tmp1.setNumNodo(parser.contador++);
+            tmp1.setValor(a.toString());
+
+            tmp.addHijo((Nodo) tmp1);
+            RESULT = tmp;
+            :}
+      | HEX:a
+            {:
+            Nodo tmp = new Nodo("Int_literal");
+            tmp.setNumNodo(parser.contador++);
+            Nodo tmp1 = new Nodo("HEX");
+            tmp1.setNumNodo(parser.contador++);
+            tmp1.setValor(a.toString());
+
+            tmp.addHijo((Nodo) tmp1);
+            RESULT = tmp;
+            :};
+
+
+Chars_literal::=
+          STRGN:a
+              {:
+              Nodo tmp = new Nodo("Chars_literal");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("STRGN");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor(a.toString());
+
+              tmp.addHijo((Nodo) tmp1);
+              RESULT = tmp;
+              :}
+        | LETTER:a
+              {:
+              Nodo tmp = new Nodo("Chars_literal");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("LETTER");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor(a.toString());
+
+              tmp.addHijo((Nodo) tmp1);
+              RESULT = tmp;
+              :};
+
+
+Bool_literal::=
+        TRT
+            {:
+            Nodo tmp = new Nodo("Bool_literal");
+            tmp.setNumNodo(parser.contador++);
+            Nodo tmp1 = new Nodo("TRT");
+            tmp1.setNumNodo(parser.contador++);
+            tmp1.setValor("True");
+
+            tmp.addHijo((Nodo) tmp1);
+            RESULT = tmp;
+            :}
+      | FLS
+          {:
+          Nodo tmp = new Nodo("Bool_literal");
+          tmp.setNumNodo(parser.contador++);
+          Nodo tmp1 = new Nodo("FLS");
+          tmp1.setNumNodo(parser.contador++);
+          tmp1.setValor("False");
+
+          tmp.addHijo((Nodo) tmp1);
+          RESULT = tmp;
+          :};
+
+
+FunctionDecl::=
+        FUNC TypeMeth:a IDNT:b PARA PARC OBRACE Block:c CBRACE
+              {:
+              Nodo tmp = new Nodo("FunctionDecl");
+              tmp.setNumNodo(parser.contador++);
+              Nodo tmp1 = new Nodo("Tkn");
+              tmp1.setNumNodo(parser.contador++);
+              tmp1.setValor("func");
+              Nodo tmp2 = new Nodo("IDNT");
+              tmp2.setNumNodo(parser.contador++);
+              tmp2.setValor(b.toString());
+              Nodo tmp3 = new Nodo("Tkn");
+              tmp3.setNumNodo(parser.contador++);
+              tmp3.setValor(" (");
+              Nodo tmp4 = new Nodo("Tkn");
+              tmp4.setNumNodo(parser.contador++);
+              tmp4.setValor(" )");
+              Nodo tmp5 = new Nodo("Tkn");
+              tmp5.setNumNodo(parser.contador++);
+              tmp5.setValor(" {");
+              Nodo tmp6 = new Nodo("Tkn");
+              tmp6.setNumNodo(parser.contador++);
+              tmp6.setValor(" }");
+
+              tmp.addHijo((Nodo) tmp1);
+              tmp.addHijo((Nodo) a);
+              tmp.addHijo((Nodo) tmp2);
+              tmp.addHijo((Nodo) tmp3);
+              tmp.addHijo((Nodo) tmp4);
+              tmp.addHijo((Nodo) tmp5);
+              tmp.addHijo((Nodo) c);
+              tmp.addHijo((Nodo) tmp6);
+              RESULT = tmp;
+              :}
+        | FUNC TypeMeth:a IDNT:b PARA ParamDecl:c PARC OBRACE Block:d CBRACE
+                {:
+                Nodo tmp = new Nodo("FunctionDecl");
+                tmp.setNumNodo(parser.contador++);
+                Nodo tmp1 = new Nodo("Tkn");
+                tmp1.setNumNodo(parser.contador++);
+                tmp1.setValor("func");
+                Nodo tmp2 = new Nodo("IDNT");
+                tmp2.setNumNodo(parser.contador++);
+                tmp2.setValor(b.toString());
+                Nodo tmp3 = new Nodo("Tkn");
+                tmp3.setNumNodo(parser.contador++);
+                tmp3.setValor(" (");
+                Nodo tmp4 = new Nodo("Tkn");
+                tmp4.setNumNodo(parser.contador++);
+                tmp4.setValor(" )");
+                Nodo tmp5 = new Nodo("Tkn");
+                tmp5.setNumNodo(parser.contador++);
+                tmp5.setValor(" {");
+                Nodo tmp6 = new Nodo("Tkn");
+                tmp6.setNumNodo(parser.contador++);
+                tmp6.setValor(" }");
+
+                tmp.addHijo((Nodo) tmp1);
+                tmp.addHijo((Nodo) a);
+                tmp.addHijo((Nodo) tmp2);
+                tmp.addHijo((Nodo) tmp3);
+                tmp.addHijo((Nodo) c);
+                tmp.addHijo((Nodo) tmp4);
+                tmp.addHijo((Nodo) tmp5);
+                tmp.addHijo((Nodo) d);
+                tmp.addHijo((Nodo) tmp6);
+                RESULT = tmp;
+
+                :};
+
+ParamDecl::=
+            Type:a IDNT:b
+                  {:
+                  Nodo tmp = new Nodo("ParamDecl");
+                  tmp.setNumNodo(parser.contador++);
+                  Nodo tmp1 = new Nodo(" IDNT");
+                  tmp1.setNumNodo(parser.contador++);
+                  tmp1.setValor(b.toString());
+
+                  tmp.addHijo((Nodo) a);
+                  tmp.addHijo((Nodo) tmp1);
+                  RESULT = tmp;
+                  :}
+          | Type:a IDNT:b COMA ParamDecl:c
+                  {:
+                  Nodo tmp = new Nodo("ParamDecl");
+                  tmp.setNumNodo(parser.contador++);
+                  Nodo tmp1 = new Nodo("IDNT");
+                  tmp1.setNumNodo(parser.contador++);
+                  tmp1.setValor(b.toString());
+                  Nodo tmp2 = new Nodo("Tkn");
+                  tmp2.setNumNodo(parser.contador++);
+                  tmp2.setValor(" ,");
+
+                  tmp.addHijo((Nodo) a);
+                  tmp.addHijo((Nodo) tmp1);
+                  tmp.addHijo((Nodo) tmp2);
+                  tmp.addHijo((Nodo) c);
+                  RESULT = tmp;
+                  :};
+
+TypeMeth::=
+          VOID
+                  {:
+                  Nodo tmp = new  Nodo("TypeMeth");
+                  tmp.setNumNodo(parser.contador++);
+                  Nodo tmp1 = new Nodo("VOID");
+                  tmp1.setNumNodo(parser.contador++);
+                  tmp1.setValor("void");
+                  tmp.addHijo((Nodo) tmp1);
+                  RESULT = tmp;
+                  :}
+        | Type:a
+            {:
+            Nodo tmp = new  Nodo("TypeMeth");
+            tmp.setNumNodo(parser.contador++);
+            tmp.addHijo((Nodo) a);
+            RESULT = tmp;
+            :};
+
+Type::=
+        INTG
+            {:
+            Nodo tmp = new Nodo("Type");
+            tmp.setNumNodo(parser.contador++);
+            Nodo tmp1 = new Nodo("INTG");
+            tmp1.setNumNodo(parser.contador++);
+            tmp1.setValor("int");
+
+            tmp.addHijo((Nodo) tmp1);
+            RESULT = tmp;
+            :}
+      | BOOLEAN
+        {:
+        Nodo tmp = new Nodo("Type");
+        tmp.setNumNodo(parser.contador++);
+        Nodo tmp1 = new Nodo("BOOLEAN");
+        tmp1.setNumNodo(parser.contador++);
+        tmp1.setValor("boolean");
+
+        tmp.addHijo((Nodo) tmp1);
+        RESULT = tmp;
+        :};
