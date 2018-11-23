@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 /**
  *
- * @author Juan C
+ * @author Ricardo Pineda
  */
 public class Nodo {
     public String nombre;
