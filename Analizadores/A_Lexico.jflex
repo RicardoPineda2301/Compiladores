@@ -44,13 +44,13 @@ Hex = 0[xX][0-9a-fA-F]+
 //-----> Simbolos
 
 /* operators */
-<YYINITIAL> "+"         { return new Symbol(Simbolos.PLUS, yycolumn, yyline, yytext()); }
-<YYINITIAL> "-"         { return new Symbol(Simbolos.MINUS, yycolumn, yyline, yytext()); }
-<YYINITIAL> "*"         { return new Symbol(Simbolos.TIMES, yycolumn, yyline, yytext()); }
+<YYINITIAL> "+"         { return new Symbol(Simbolos.MAS, yycolumn, yyline, yytext()); }
+<YYINITIAL> "-"         { return new Symbol(Simbolos.MENOS, yycolumn, yyline, yytext()); }
+<YYINITIAL> "*"         { return new Symbol(Simbolos.POR, yycolumn, yyline, yytext()); }
 <YYINITIAL> "/"         { return new Symbol(Simbolos.DIV, yycolumn, yyline, yytext()); }
-<YYINITIAL> "="         { return new Symbol(Simbolos.EQ, yycolumn, yyline, yytext()); }
-<YYINITIAL> "+="         { return new Symbol(Simbolos.PEQ, yycolumn, yyline, yytext()); }
-<YYINITIAL> "-="         { return new Symbol(Simbolos.LEQ, yycolumn, yyline, yytext()); }
+<YYINITIAL> "="         { return new Symbol(Simbolos.IGUAL, yycolumn, yyline, yytext()); }
+<YYINITIAL> "+="         { return new Symbol(Simbolos.SIGUAL, yycolumn, yyline, yytext()); }
+<YYINITIAL> "-="         { return new Symbol(Simbolos.RIGUAL, yycolumn, yyline, yytext()); }
 
 <YYINITIAL> ","         { return new Symbol(Simbolos.COMA, yycolumn, yyline, yytext()); }
 <YYINITIAL> "<"         { return new Symbol(Simbolos.LT, yycolumn, yyline, yytext()); }
@@ -70,10 +70,10 @@ Hex = 0[xX][0-9a-fA-F]+
 <YYINITIAL> ")"         { return new Symbol(Simbolos.PARC, yycolumn, yyline, yytext()); }
 <YYINITIAL> ";"         { return new Symbol(Simbolos.PUNTOCOMA, yycolumn, yyline, yytext()); }
 <YYINITIAL> ":"         { return new Symbol(Simbolos.DBLPUNTO, yycolumn, yyline, yytext()); }
-<YYINITIAL> "["         { return new Symbol(Simbolos.OBRACK, yycolumn, yyline, yytext()); }
-<YYINITIAL> "]"         { return new Symbol(Simbolos.CBRACK, yycolumn, yyline, yytext()); }
-<YYINITIAL> "{"         { return new Symbol(Simbolos.OBRACE, yycolumn, yyline, yytext()); }
-<YYINITIAL> "}"         { return new Symbol(Simbolos.CBRACE, yycolumn, yyline, yytext()); }
+<YYINITIAL> "["         { return new Symbol(Simbolos.BRACKA, yycolumn, yyline, yytext()); }
+<YYINITIAL> "]"         { return new Symbol(Simbolos.BRACKC, yycolumn, yyline, yytext()); }
+<YYINITIAL> "{"         { return new Symbol(Simbolos.LLAVEA, yycolumn, yyline, yytext()); }
+<YYINITIAL> "}"         { return new Symbol(Simbolos.LLAVEC, yycolumn, yyline, yytext()); }
 
 
 //-------> Simbolos ER
@@ -86,17 +86,14 @@ Hex = 0[xX][0-9a-fA-F]+
 <YYINITIAL> "class"     { return new Symbol(Simbolos.CLASS, yycolumn, yyline, yytext()); }
 <YYINITIAL> "print"     { return new Symbol(Simbolos.PRINT,yycolumn, yyline, yytext()); }
 <YYINITIAL> "int"       { return new Symbol(Simbolos.INTG, yycolumn, yyline, yytext()); }
-//<YYINITIAL> "String"  { return new Symbol(Simbolos.STRG, yycolumn, yyline, yytext()); }
-//<YYINITIAL> "double"  { return new Symbol(Simbolos.DOBL, yycolumn, yyline, yytext()); }
-//<YYINITIAL> "char"    { return new Symbol(Simbolos.CHR, yycolumn, yyline, yytext()); }
 <YYINITIAL> "func"      { return new Symbol(Simbolos.FUNC, yycolumn, yyline, yytext()); }
 <YYINITIAL> "Program"   { return new Symbol(Simbolos.PRGRM, yycolumn, yyline, yytext()); }
-<YYINITIAL> "True"      { return new Symbol(Simbolos.TRT, yycolumn, yyline, yytext()); }
-<YYINITIAL> "False"     { return new Symbol(Simbolos.FLS, yycolumn, yyline, yytext()); }
+<YYINITIAL> "True"      { return new Symbol(Simbolos.TRUE, yycolumn, yyline, yytext()); }
+<YYINITIAL> "False"     { return new Symbol(Simbolos.FALSE, yycolumn, yyline, yytext()); }
 <YYINITIAL> "main"      { return new Symbol(Simbolos.MAIN, yycolumn, yyline, yytext()); }
 <YYINITIAL> "void"      { return new Symbol(Simbolos.VOID, yycolumn, yyline, yytext()); }
 <YYINITIAL> "return"    { return new Symbol(Simbolos.RTN, yycolumn, yyline, yytext()); }
-<YYINITIAL> "continue"  { return new Symbol(Simbolos.CNT, yycolumn, yyline, yytext()); }
+<YYINITIAL> "continue"  { return new Symbol(Simbolos.CONT, yycolumn, yyline, yytext()); }
 <YYINITIAL> "callout"   { return new Symbol(Simbolos.CLL, yycolumn, yyline, yytext()); }
 
 
